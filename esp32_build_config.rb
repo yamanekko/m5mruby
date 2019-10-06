@@ -26,13 +26,25 @@ MRuby::Build.new do |conf|
 end
 
 MRuby::CrossBuild.new('esp32') do |conf|
+  CONFIG_TOOLPREFIX="xtensa-esp32-elf-"
+
   toolchain :gcc
 
   conf.cc do |cc|
-    cc.include_paths << ENV["COMPONENT_INCLUDES"].split(' ')
+    cc.command = "#{CONFIG_TOOLPREFIX}gcc"
+    if ENV["COMPONENT_INCLUDES"]
+      cc.include_paths << ENV["COMPONENT_INCLUDES"].split(';')
+    end
 
     cc.flags << '-Wno-maybe-uninitialized'
-    cc.flags.collect! { |x| x.gsub('-MP', '') }
+    cc.flags << '-Wno-char-subscripts'
+    cc.flags << '-Wno-pointer-sign'
+    cc.flags << '-ffunction-sections'
+    cc.flags << '-fdata-sections'
+    cc.flags << '-fstrict-volatile-bitfields'
+    cc.flags << '-mlongcalls'
+
+    cc.flags.reject!{ |x| x == '-MP' }
 
     cc.defines << %w(MRB_HEAP_PAGE_SIZE=64)
     cc.defines << %w(MRB_USE_IV_SEGLIST)
@@ -41,14 +53,24 @@ MRuby::CrossBuild.new('esp32') do |conf|
     cc.defines << %w(MRB_GC_STRESS)
 
     cc.defines << %w(ESP_PLATFORM)
+    cc.defines << %w(ESP32)
   end
 
   conf.cxx do |cxx|
+    cxx.command = "#{CONFIG_TOOLPREFIX}g++"
     cxx.include_paths = conf.cc.include_paths.dup
 
-    cxx.flags.collect! { |x| x.gsub('-MP', '') }
+    cc.flags.reject!{ |x| x == '-MP' }
 
     cxx.defines = conf.cc.defines.dup
+  end
+
+  conf.linker do |linker|
+    linker.command = "#{CONFIG_TOOLPREFIX}ld"
+  end
+
+  conf.archiver do |archiver|
+    archiver.command = "#{CONFIG_TOOLPREFIX}ar"
   end
 
   conf.bins = []

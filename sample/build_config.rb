@@ -6,7 +6,7 @@ MRuby::Build.new do |conf|
     cc.flags = [%w(-g -std=gnu99 -O3 -Wall -Werror-implicit-function-declaration -Wdeclaration-after-statement -Wwrite-strings)]
   end
 
-  [conf.cxx].each do |cxx|
+  conf.cxx do |cxx|
     cxx.command = 'g++'
     cxx.flags = [%w(-g -O3 -Wall -Werror-implicit-function-declaration)]
   end
@@ -26,12 +26,9 @@ MRuby::Build.new do |conf|
 end
 
 MRuby::CrossBuild.new('esp32') do |conf|
-  CONFIG_TOOLPREFIX="xtensa-esp32-elf-"
-
   toolchain :gcc
 
   conf.cc do |cc|
-    cc.command = "#{CONFIG_TOOLPREFIX}gcc"
     if ENV["COMPONENT_INCLUDES"]
       cc.include_paths << ENV["COMPONENT_INCLUDES"].split(';')
     end
@@ -57,20 +54,11 @@ MRuby::CrossBuild.new('esp32') do |conf|
   end
 
   conf.cxx do |cxx|
-    cxx.command = "#{CONFIG_TOOLPREFIX}g++"
     cxx.include_paths = conf.cc.include_paths.dup
 
     cc.flags.reject!{ |x| x == '-MP' }
 
     cxx.defines = conf.cc.defines.dup
-  end
-
-  conf.linker do |linker|
-    linker.command = "#{CONFIG_TOOLPREFIX}ld"
-  end
-
-  conf.archiver do |archiver|
-    archiver.command = "#{CONFIG_TOOLPREFIX}ar"
   end
 
   conf.bins = []

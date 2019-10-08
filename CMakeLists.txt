@@ -1,11 +1,10 @@
-set(COMPONENT_ADD_INCLUDEDIRS "mruby/include")
-set(COMPONENT_PRIV_REQUIRES freertos)
+set(COMPONENT_ADD_INCLUDEDIRS "")
 
 register_component()
 
 set(MRUBY_DIR "${COMPONENT_PATH}/mruby")
 
-set(MRUBY_INCLUDES ${COMPONENT_PATH}/mruby/include ${COMPONENT_PATH}/../../build/config
+set(MRUBY_INCLUDES ${COMPONENT_PATH}/../../build/config
     ${COMPONENT_PATH}/../m5stack/src
     ${IDF_PATH}/components/bt/bluedroid/api/include/api
     ${COMPONENT_PATH}/../arduino/variants/esp32
@@ -69,7 +68,7 @@ set(LIBMRUBY_FILE "${COMPONENT_PATH}/mruby/build/esp32/lib/libmruby.a")
 
 add_custom_command(
   OUTPUT ${LIBMRUBY_FILE}
-  COMMAND rake "COMPONENT_INCLUDES=${MRUBY_INCLUDES}" "MRUBY_CONFIG=${COMPONENT_PATH}/esp32_build_config.rb"
+  COMMAND rake "COMPONENT_INCLUDES=${MRUBY_INCLUDES}" "CC=${CMAKE_C_COMPILER}" "LD=${CMAKE_LINKER}" "AR=${CMAKE_AR}" "TARGET_INCLUDES=$<TARGET_PROPERTY:${COMPONENT_NAME},INTERFACE_INCLUDE_DIRECTORIES>" "MRUBY_CONFIG=${PROJECT_PATH}/build_config.rb"
   COMMENT "building mruby..."
   WORKING_DIRECTORY ${MRUBY_DIR}
   VERBATIM
